@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as ws_status;
+import '../models/message.dart';
 import 'transport_interface.dart';
 import '../core/protocol/encrypted_envelope.dart';
 

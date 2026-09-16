@@ -13,8 +13,8 @@ dependencies:
     sdk: flutter
 
   # Kriptografi: X25519, Ed25519, ChaCha20-Poly1305, HKDF
+  # cryptography_flutter kaldırıldı — build uyumsuzluğu. Saf Dart impl yeterli.
   cryptography: ^2.7.0
-  cryptography_flutter: ^2.3.2
 
   # Güvenli yerel depolama (Keystore / Keychain)
   flutter_secure_storage: ^9.2.2

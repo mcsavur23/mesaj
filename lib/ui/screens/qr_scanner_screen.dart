@@ -25,6 +25,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   bool _isProcessing = false;
   String? _statusMessage;
   bool _isSuccess = false;
+  bool _torchOn = false;
 
   @override
   void dispose() {
@@ -41,16 +42,14 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         title: const Text('Arkadaş Ekle'),
         actions: [
           IconButton(
-            icon: ValueListenableBuilder(
-              valueListenable: _scannerController.torchState,
-              builder: (_, state, __) => Icon(
-                state == TorchState.on
-                    ? Icons.flash_on_rounded
-                    : Icons.flash_off_rounded,
-                color: AppTheme.neonCyan,
-              ),
+            icon: Icon(
+              _torchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+              color: AppTheme.neonCyan,
             ),
-            onPressed: () => _scannerController.toggleTorch(),
+            onPressed: () {
+              _scannerController.toggleTorch();
+              setState(() => _torchOn = !_torchOn);
+            },
           ),
         ],
       ),
