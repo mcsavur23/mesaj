@@ -3,7 +3,7 @@ name: Build & Release APK
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Manuel tetikleme butonu sağlar
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,20 +26,6 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
           cache: true
-
-      - name: Create Android Platform Files (if missing)
-        run: |
-          if [ ! -d "android" ]; then
-            flutter create . --platforms=android --org com.anonim.mesaj
-          fi
-
-      - name: Add Permissions to AndroidManifest.xml
-        run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST" ]; then
-            # Kamera ve Bluetooth izinlerini manifest'e ekle
-            sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.BLUETOOTH" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />\n    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />\n    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />\n    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />' "$MANIFEST"
-          fi
 
       - name: Install Dependencies
         run: flutter pub get
