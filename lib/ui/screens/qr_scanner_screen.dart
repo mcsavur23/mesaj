@@ -129,8 +129,8 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       final newContact = PeerContact(
         peerId: payload.peerId,
         alias: payload.alias,
-        ed25519PublicKey: payload.ed25519PublicKey,
-        x25519PublicKey: payload.x25519PublicKey,
+        ed25519PublicKey: payload.identityPublicKey,
+        x25519PublicKey: payload.encryptionPublicKey,
         bleServiceUuid: payload.bleServiceUuid,
         addedAt: DateTime.now(),
         isVerified: true,

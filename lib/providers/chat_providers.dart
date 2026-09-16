@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -72,6 +73,7 @@ final hybridRouterProvider = Provider<HybridRouter?>((ref) {
       );
 
       final ble = BluetoothP2PTransport(
+        myPeerId: identity.peerId,
         myBleServiceUuid: identity.bleServiceUuid,
       );
 
@@ -132,33 +134,42 @@ class ChatNotifier extends StateNotifier<List<Message>> {
   /// Karşı taraftan gelen şifreli zarfı çöz ve listeye ekle
   Future<void> _handleIncomingEnvelope(EnvelopeReceived event) async {
     try {
-      // 1. Ortak anahtar türet (bizim X25519 priv + karşı tarafın X25519 pub)
+      final envelope = event.envelope;
+
+      // 1. Ortak anahtar türet (bizim X25519 priv + ephemeral pub)
       final sessionKey = await CryptoService.deriveSharedKey(
         myPrivateKeyBytes: myIdentity.encryptionKeyPair.privateKeyBytes,
-        theirPublicKeyBytes: peer.x25519PublicKey,
+        theirPublicKeyBytes: envelope.ephemeralPublicKey,
       );
 
-      // 2. ChaCha20-Poly1305 ile şifreyi çöz
-      // (nonce + payload birleşik format veya zarftaki nonce + payload)
+      // 2. AAD oluştur (gönderici:alıcı)
+      final aad = Uint8List.fromList(
+          utf8.encode('${envelope.senderId}:${envelope.recipientId}'));
+
+      // 3. nonce + ciphertext birleşik format
       final encryptedBytes = Uint8List.fromList([
-        ...event.envelope.nonce,
-        ...event.envelope.payload,
+        ...envelope.nonce,
+        ...envelope.ciphertext,
       ]);
 
       final decryptedBytes = await CryptoService.decryptMessage(
         ciphertext: encryptedBytes,
         sessionKey: sessionKey,
+        aad: aad,
       );
 
       final content = utf8.decode(decryptedBytes);
 
+      final messageId = const Uuid().v4();
+      final receivedAt = DateTime.now();
+
       final incomingMessage = Message(
-        id: event.envelope.messageId,
+        id: messageId,
         senderId: peer.peerId,
         recipientId: myIdentity.peerId,
         content: content,
-        sentAt: event.envelope.timestamp,
-        deliveredAt: DateTime.now(),
+        sentAt: DateTime.fromMillisecondsSinceEpoch(envelope.timestamp),
+        deliveredAt: receivedAt,
         status: MessageStatus.received,
         transport: event.transport,
       );
@@ -166,11 +177,11 @@ class ChatNotifier extends StateNotifier<List<Message>> {
       await MessageRepository.saveMessage(incomingMessage);
       state = [...state, incomingMessage];
     } catch (e) {
-      // Şifre çözme hatası veya bozuk paket
+      // Şifre çözme hatası veya bozuk paket — sessizce yoksay
     }
   }
 
-  /// Mesaj gönder: E2EE Şifrele -> HybridRouter ile ilet -> Yerel DB'ye kaydet -> Ekrana bas
+  /// Mesaj gönder: E2EE Şifrele → HybridRouter ile ilet → Yerel DB'ye kaydet → Ekrana bas
   Future<bool> sendMessage(String text) async {
     if (text.trim().isEmpty) return false;
 
@@ -180,42 +191,17 @@ class ChatNotifier extends StateNotifier<List<Message>> {
     final messageId = const Uuid().v4();
     final now = DateTime.now();
 
-    // 1. Ortak anahtarı türet
-    final sessionKey = await CryptoService.deriveSharedKey(
-      myPrivateKeyBytes: myIdentity.encryptionKeyPair.privateKeyBytes,
-      theirPublicKeyBytes: peer.x25519PublicKey,
-    );
-
-    // 2. ChaCha20-Poly1305 AEAD ile mesajı şifrele
-    final encryptedBlob = await CryptoService.encryptMessage(
-      plaintext: Uint8List.fromList(utf8.encode(text.trim())),
-      sessionKey: sessionKey,
-    );
-
-    // encryptedBlob formatı: 12-byte nonce + (kalanı ciphertext + MAC)
-    final nonce = encryptedBlob.sublist(0, 12);
-    final payload = encryptedBlob.sublist(12);
-
-    // 3. İmzala (Ed25519)
-    final signature = await CryptoService.sign(
-      payload: payload,
-      privateKeyBytes: myIdentity.identityKeyPair.privateKeyBytes,
-      publicKeyBytes: myIdentity.identityKeyPair.publicKeyBytes,
-    );
-
-    // 4. Şifreli zarfı paketle
-    final envelope = EncryptedEnvelope(
-      messageId: messageId,
+    // 1. EnvelopeBuilder ile tam E2EE zarfı oluştur
+    final envelope = await EnvelopeBuilder.seal(
+      plaintext: text.trim(),
+      senderPrivateKeyBytes: myIdentity.identityKeyPair.privateKeyBytes,
+      senderPublicKeyBytes: myIdentity.identityKeyPair.publicKeyBytes,
       senderId: myIdentity.peerId,
       recipientId: peer.peerId,
-      ephemeralPublicKey: myIdentity.encryptionKeyPair.publicKeyBytes,
-      nonce: nonce,
-      payload: payload,
-      signature: signature,
-      timestamp: now,
+      recipientX25519PublicKeyBytes: peer.x25519PublicKey,
     );
 
-    // 4. Ön UI durumu ekle (pending)
+    // 2. Ön UI durumu ekle (pending)
     final initialMessage = Message(
       id: messageId,
       senderId: myIdentity.peerId,
@@ -227,7 +213,7 @@ class ChatNotifier extends StateNotifier<List<Message>> {
     );
     state = [...state, initialMessage];
 
-    // 5. İlet
+    // 3. İlet
     final result = await router.route(
       envelope: envelope,
       targetBleServiceUuid: peer.bleServiceUuid,
@@ -241,7 +227,7 @@ class ChatNotifier extends StateNotifier<List<Message>> {
       transport: result.transport,
     );
 
-    // 6. DB'ye kaydet ve state güncelle
+    // 4. DB'ye kaydet ve state güncelle
     await MessageRepository.saveMessage(updatedMessage);
 
     state = [

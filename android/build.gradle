@@ -10,21 +10,23 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 
-// flutter_blue_plus gibi kütüphanelerin android.flutter.compileSdkVersion araması için extension mock
-class FlutterMockExtension {
-    int compileSdkVersion = 34
-    int minSdkVersion = 21
-    int targetSdkVersion = 34
+// flutter_blue_plus ve cryptography_flutter gibi kütüphanelerin
+// android.flutter.compileSdkVersion property'sini aramasına yönelik çözüm.
+// configureEach: afterEvaluate'in neden olduğu "already evaluated" hatasını önler.
+class FlutterExtension {
+    int compileSdkVersion = 36
+    int minSdkVersion = 23
+    int targetSdkVersion = 36
 }
 
 subprojects {
-    project.plugins.withId("com.android.library") {
-        if (!project.android.extensions.findByName("flutter")) {
-            project.android.extensions.create("flutter", FlutterMockExtension)
-        }
-        project.android {
-            compileSdkVersion 34
-            buildToolsVersion "34.0.0"
+    plugins.whenPluginAdded { plugin ->
+        if (plugin.class.name.contains("com.android.build.gradle.LibraryPlugin")) {
+            def androidExt = project.extensions.findByName("android")
+            if (androidExt != null && !androidExt.extensions.findByName("flutter")) {
+                androidExt.extensions.create("flutter", FlutterExtension)
+            }
+            project.android.compileSdkVersion 36
         }
     }
 }

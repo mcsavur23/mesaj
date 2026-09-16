@@ -6,8 +6,8 @@ plugins {
 
 android {
     namespace "com.anonim.mesaj"
-    compileSdk 34
-    compileSdkVersion 34
+    compileSdk 36
+    compileSdkVersion 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -20,10 +20,10 @@ android {
 
     defaultConfig {
         applicationId "com.anonim.mesaj"
-        minSdk 21
-        minSdkVersion 21
-        targetSdk 34
-        targetSdkVersion 34
+        minSdk 23
+        minSdkVersion 23
+        targetSdk 36
+        targetSdkVersion 36
         versionCode 1
         versionName "1.0.0"
     }
