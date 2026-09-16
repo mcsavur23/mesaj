@@ -1,0 +1,84 @@
+name: mesaj
+description: Anonim, uçtan uca şifreli hibrit mesajlaşma uygulaması.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Kriptografi: X25519, Ed25519, ChaCha20-Poly1305, HKDF
+  cryptography: ^2.7.0
+  cryptography_flutter: ^2.3.2
+
+  # Güvenli yerel depolama (Keystore / Keychain)
+  flutter_secure_storage: ^9.2.2
+
+  # Durum yönetimi
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # QR Kod üretimi
+  qr_flutter: ^4.1.0
+
+  # QR Kod tarama (kamera)
+  mobile_scanner: ^5.2.3
+
+  # JSON serileştirme
+  json_annotation: ^4.9.0
+
+  # WebSocket istemcisi
+  web_socket_channel: ^3.0.1
+
+  # Bluetooth LE (BLE)
+  flutter_blue_plus: ^1.35.3
+
+  # UUID üretimi
+  uuid: ^4.4.2
+
+  # Bağlantı durumu izleme
+  connectivity_plus: ^6.1.0
+
+  # İzin yönetimi
+  permission_handler: ^11.3.1
+
+  # Yerel veritabanı (mesaj geçmişi, sadece cihazda)
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Zaman yönetimi
+  intl: ^0.19.0
+
+  # Animasyonlar ve ikonlar
+  flutter_animate: ^4.5.0
+  phosphor_flutter: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.11
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.3
+  mockito: ^5.4.4
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+  assets:
+    - assets/fonts/
