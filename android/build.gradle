@@ -9,8 +9,24 @@ rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
+// flutter_blue_plus gibi kütüphanelerin android.flutter.compileSdkVersion araması için extension mock
+class FlutterMockExtension {
+    int compileSdkVersion = 34
+    int minSdkVersion = 21
+    int targetSdkVersion = 34
+}
+
 subprojects {
-    project.evaluationDependsOn(":app")
+    project.plugins.withId("com.android.library") {
+        if (!project.android.extensions.findByName("flutter")) {
+            project.android.extensions.create("flutter", FlutterMockExtension)
+        }
+        project.android {
+            compileSdkVersion 34
+            buildToolsVersion "34.0.0"
+        }
+    }
 }
 
 tasks.register("clean", Delete) {
