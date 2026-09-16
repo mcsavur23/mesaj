@@ -55,7 +55,6 @@ class AppTheme {
         onBackground: textPrimary,
         outline: border,
       ),
-      fontFamily: 'Inter',
       textTheme: const TextTheme(
         displayLarge: TextStyle(
             fontSize: 32, fontWeight: FontWeight.w700, color: textPrimary),
@@ -83,7 +82,6 @@ class AppTheme {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
@@ -113,7 +111,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: neonCyan, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: textMuted, fontFamily: 'Inter'),
+        hintStyle: const TextStyle(color: textMuted),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
@@ -125,7 +123,6 @@ class AppTheme {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),

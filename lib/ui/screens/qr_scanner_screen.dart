@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_theme.dart';
 import '../../core/protocol/qr_payload.dart';
+import '../../models/peer_contact.dart';
+import '../../providers/chat_providers.dart';
 
 /// Arkadaşın QR kodunu kamera ile tarayan ve eşleşme başlatan ekran.
-class QrScannerScreen extends StatefulWidget {
+class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
 
   @override
-  State<QrScannerScreen> createState() => _QrScannerScreenState();
+  ConsumerState<QrScannerScreen> createState() => _QrScannerScreenState();
 }
 
-class _QrScannerScreenState extends State<QrScannerScreen> {
+class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   final _scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.normal,
     facing: CameraFacing.back,
@@ -122,15 +125,27 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         return;
       }
 
-      // TODO: ContactRepository.upsertContact() ile kaydet (Riverpod action)
+      // Arkadaşı SQLite'a kaydet ve Provider'ı güncelle
+      final newContact = PeerContact(
+        peerId: payload.peerId,
+        alias: payload.alias,
+        ed25519PublicKey: payload.ed25519PublicKey,
+        x25519PublicKey: payload.x25519PublicKey,
+        bleServiceUuid: payload.bleServiceUuid,
+        addedAt: DateTime.now(),
+        isVerified: true,
+      );
+
+      await ref.read(contactsProvider.notifier).addContact(newContact);
+
       setState(() {
         _statusMessage = '✓ ${payload.alias} başarıyla eklendi!';
         _isSuccess = true;
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(milliseconds: 1200));
 
-      if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context, newContact);
     } catch (e) {
       _showError('Geçersiz QR kodu. Mesaj uygulamasına ait değil.');
     }
